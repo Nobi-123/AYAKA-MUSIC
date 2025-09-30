@@ -4,6 +4,7 @@ import random
 from pyrogram import filters
 from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
+from logging import getLogger
 
 import config
 from modules.voice_manager import text_to_voice
@@ -11,12 +12,14 @@ from modules.chatbot import samba_chat_reply
 from modules.reactions import get_reaction
 from modules.stickers import STICKERS
 from utils.helpers import is_chat_enabled, enable_chat, disable_chat
-from logging import getLogger
-
-LOGGER = getLogger("RAUSHAN")
 
 from pyrogram import Client, errors
 
+LOGGER = getLogger("RAUSHAN")
+
+# --------------------------
+# RAUSHAN Bot Client
+# --------------------------
 class RAUSHAN(Client):
     def __init__(self):
         LOGGER.info("Starting Bot...")
@@ -69,7 +72,7 @@ class RAUSHAN(Client):
 bot = RAUSHAN()
 
 # --------------------------
-# Commands: Enable / Disable Chatbot
+# Chatbot Enable / Disable
 # --------------------------
 @bot.on_message(filters.command("enablechat") & filters.user(config.OWNER_ID))
 async def enable_chat_cmd(client, message: Message):
@@ -82,7 +85,7 @@ async def disable_chat_cmd(client, message: Message):
     await message.reply_text("❌ Chatbot disabled in this chat.")
 
 # --------------------------
-# Message Handler
+# Owner / Developer / Papa Keywords
 # --------------------------
 OWNER_KEYWORDS = [
     "owner", "developer", "father", "papa",
@@ -94,18 +97,19 @@ OWNER_KEYWORDS = [
     "who is your papa", "who is your father"
 ]
 
+# --------------------------
+# Handle Messages
+# --------------------------
 @bot.on_message(filters.text)
 async def handle_messages(client, message: Message):
     chat_id = message.chat.id
     text = message.text.lower()
 
-    # Only respond if chatbot is enabled in this chat
+    # Only respond if chatbot is enabled
     if not await is_chat_enabled(chat_id):
         return
 
-    # --------------------------
     # Owner / Developer / Papa Replies
-    # --------------------------
     if any(keyword in text for keyword in OWNER_KEYWORDS):
         reply_text = f"Mera owner hai {config.OWNER_USERNAME} ❤️"
         await message.reply_text(reply_text)
@@ -114,18 +118,14 @@ async def handle_messages(client, message: Message):
             await message.reply_voice(audio_bytes)
         return
 
-    # --------------------------
     # SambaNova Chatbot Reply
-    # --------------------------
     reply_text = await samba_chat_reply(message.text, chat_id)
     await message.reply_text(reply_text)
     audio_bytes = await text_to_voice(reply_text)
     if audio_bytes:
         await message.reply_voice(audio_bytes)
 
-    # --------------------------
     # Reactions
-    # --------------------------
     reaction = await get_reaction(reply_text)
     if reaction:
         await message.reply_text(reaction)
@@ -136,6 +136,12 @@ async def handle_messages(client, message: Message):
 @bot.on_message(filters.sticker)
 async def sticker_reply(client, message: Message):
     await message.reply_sticker(random.choice(STICKERS))
+
+# --------------------------
+# Music Commands Placeholder
+# --------------------------
+# You can import your music player modules here, e.g.,
+# from music.player import play, pause, skip
 
 # --------------------------
 # Start Bot
