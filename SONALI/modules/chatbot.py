@@ -39,6 +39,8 @@ VOICE_REQUEST_KEYWORDS = [
     "ye msg mujhe voice msg mai bhejo",
     "send this in voice",
     "voice me bhejo"
+    "voice"
+    "baby suno"
 ]
 
 # --------------------------
