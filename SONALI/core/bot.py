@@ -1,174 +1,86 @@
 import asyncio
 import random
 import logging
-from pyrogram import Client, filters, errors
+from pyrogram import Client, filters
 from pyrogram.types import Message
-from pyrogram.enums import ChatMemberStatus
 
 from modules.voice_manager import text_to_voice
-from modules.chatbot import chat_and_respond, OWNER_USERNAME, last_bot_message
+from modules.chatbot import chat_and_respond, handle_voice_request
 from modules.reactions import react_to_message, STICKERS
 from modules.chat_control import is_chat_enabled, enable_chat, disable_chat
 
 import config
 
+logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("RAUSHAN")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+bot = Client(
+    "SONALI",
+    api_id=config.API_ID,
+    api_hash=config.API_HASH,
+    bot_token=config.BOT_TOKEN,
+    in_memory=True,
+    max_concurrent_transmissions=7,
 )
 
 # --------------------------
-# RAUSHAN Bot Client
+# Admin-only commands
 # --------------------------
-class RAUSHAN(Client):
-    def __init__(self):
-        LOGGER.info("Starting Bot...")
-        super().__init__(
-            "SONALI",
-            api_id=config.API_ID,
-            api_hash=config.API_HASH,
-            bot_token=config.BOT_TOKEN,
-            in_memory=True,
-            max_concurrent_transmissions=7,
-        )
-
-    async def start(self):
-        await super().start()
-        self.id = self.me.id
-        self.name = self.me.first_name + " " + (self.me.last_name or "")
-        self.username = self.me.username
-        self.mention = self.me.mention
-
-        try:
-            await self.send_message(
-                chat_id=config.LOGGER_ID,
-                text=f"<u><b>» {self.mention} ʙᴏᴛ sᴛᴀʀᴛᴇᴅ :</b></u>\n\n"
-                     f"ɪᴅ : <code>{self.id}</code>\n"
-                     f"ɴᴀᴍᴇ : {self.name}\n"
-                     f"ᴜsᴇʀɴᴀᴍᴇ : @{self.username}",
-            )
-        except (errors.ChannelInvalid, errors.PeerIdInvalid):
-            LOGGER.error("Bot cannot access the log group/channel. Add the bot there first.")
-        except Exception as ex:
-            LOGGER.error(f"Bot failed to access the log group/channel: {type(ex).__name__}")
-
-        a = await self.get_chat_member(config.LOGGER_ID, self.id)
-        if a.status != ChatMemberStatus.ADMINISTRATOR:
-            LOGGER.error("Promote the bot as an admin in your log group/channel.")
-
-        LOGGER.info(f"Music & Chat Bot Started as {self.name}")
-
-    async def stop(self):
-        await super().stop()
-
-
-bot = RAUSHAN()
-
-# --------------------------
-# Chatbot Enable / Disable (Admin Only)
-# --------------------------
-@bot.on_message(filters.command("enablechat") & filters.group)
+@bot.on_message(filters.command("enablechat") & filters.user(config.OWNER_ID))
 async def enable_chat_cmd(client, message: Message):
-    member = await client.get_chat_member(message.chat.id, message.from_user.id)
-    if member.status not in ("administrator", "creator"):
-        return await message.reply_text("❌ Only group admins can enable the chatbot.")
     await enable_chat(message.chat.id)
-    await message.reply_text("✅ Chatbot enabled in this group.")
+    await message.reply_text("✅ Chatbot enabled in this chat.")
 
-
-@bot.on_message(filters.command("disablechat") & filters.group)
+@bot.on_message(filters.command("disablechat") & filters.user(config.OWNER_ID))
 async def disable_chat_cmd(client, message: Message):
-    member = await client.get_chat_member(message.chat.id, message.from_user.id)
-    if member.status not in ("administrator", "creator"):
-        return await message.reply_text("❌ Only group admins can disable the chatbot.")
     await disable_chat(message.chat.id)
-    await message.reply_text("❌ Chatbot disabled in this group.")
-
-
-# --------------------------
-# Owner / Developer / Papa Keywords
-# --------------------------
-OWNER_KEYWORDS = [
-    "owner", "developer", "father", "papa",
-    "tere owner ka naam kya hai", "tera owner kaun hai",
-    "owner ka naam kya hai", "apka owner kaun hai",
-    "developer ka naam kya hai", "apka developer kaun hai",
-    "papa ka naam kya hai", "father ka naam kya hai",
-    "who is your owner", "who is your developer",
-    "who is your papa", "who is your father"
-]
-
-VOICE_REQUEST_KEYWORDS = [
-    "ye msg mujhe voice msg mai bhejo",
-    "send this in voice",
-    "voice me bhejo"
-]
-
+    await message.reply_text("❌ Chatbot disabled in this chat.")
 
 # --------------------------
-# Handle Text Messages
+# Handle all text messages
 # --------------------------
 @bot.on_message(filters.text)
-async def handle_messages(client, message: Message):
+async def human_chat(client, message: Message):
     chat_id = message.chat.id
-    text = message.text.lower()
+    text = message.text
 
-    # Only respond if chatbot is enabled
     if not await is_chat_enabled(chat_id):
         return
 
-    # Owner / Developer / Papa Replies
-    if any(keyword in text for keyword in OWNER_KEYWORDS):
-        reply_text = f"Mera owner hai {OWNER_USERNAME} ❤️"
-        await message.reply_text(reply_text)
-        audio_bytes = await text_to_voice(reply_text)
-        if audio_bytes:
-            await message.reply_voice(audio_bytes)
+    # Mimic typing delay like human
+    await asyncio.sleep(random.uniform(1.0, 2.5))
+
+    # Check if user wants last bot message in voice
+    audio_bytes = await handle_voice_request(chat_id, text)
+    if audio_bytes:
+        await message.reply_text("Yeh raha tumhara voice message 😘")
+        await message.reply_voice(audio_bytes)
         return
 
-    # Check for voice request keywords
-    if any(k in text for k in VOICE_REQUEST_KEYWORDS):
-        last_text = last_bot_message.get(chat_id)
-        if last_text:
-            audio_bytes = await text_to_voice(last_text)
-            await message.reply_text("Here's your message in voice 😘")
-            if audio_bytes:
-                await message.reply_voice(audio_bytes)
-            return
-        else:
-            await message.reply_text("No previous message to convert to voice 😅")
-            return
+    # Chatbot reply (fully human-like)
+    bot_text, bot_audio = await chat_and_respond(chat_id, text, message.from_user.id)
 
-    # Chatbot reply (girlfriend-style Hinglish)
-    bot_text, bot_audio = await chat_and_respond(chat_id, message.text, message.from_user.id)
-    last_bot_message[chat_id] = bot_text  # Save last bot message
+    # Send reply text
     await message.reply_text(bot_text)
+
+    # Send reply voice automatically
     if bot_audio:
         await message.reply_voice(bot_audio)
 
-    # Automatic reactions
+    # React to user message
     await react_to_message(message)
 
-
 # --------------------------
-# Sticker Reply
+# Sticker reply
 # --------------------------
 @bot.on_message(filters.sticker)
 async def sticker_reply(client, message: Message):
     await message.reply_sticker(random.choice(STICKERS))
-    await react_to_message(message)  # also run reactions for stickers
-
-
-# --------------------------
-# Music Commands Placeholder
-# --------------------------
-# Import your music player commands here if needed
-
+    await react_to_message(message)
 
 # --------------------------
-# Start Bot
+# Start bot
 # --------------------------
 if __name__ == "__main__":
-    print("Starting RAUSHAN Bot...")
+    print("Starting fully human-like RAUSHAN Bot...")
     bot.run()
