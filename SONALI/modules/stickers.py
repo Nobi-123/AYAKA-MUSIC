@@ -1,15 +1,7 @@
 # SONALI/modules/stickers.py
-"""
-Context-aware sticker replies for SONALI.
-- Sends stickers based on message content or mood
-- Works with text messages and automatic reactions
-"""
-
 import random
 
-# --------------------------
-# Sticker Pools
-# --------------------------
+# (Your existing sticker lists)
 HAPPY_STICKERS = [
     "CAACAgEAAxkBAAEBH4FgxP7JbJ2f7y-3h1O1ikG6RvDsvwACXAADwZxgD7hYxkPY3fLFiQE",
     "CAACAgEAAxkBAAEBH4NgxP7JXmvkb36xV5aRGn7wUgrctwACXQADwZxgD9Y2ztvHJuBvIiQE",
@@ -31,6 +23,9 @@ SURPRISE_STICKERS = [
 
 GENERIC_STICKERS = HAPPY_STICKERS + SAD_STICKERS + LOVE_STICKERS + SURPRISE_STICKERS
 
+# Export a single list for other modules
+STICKERS = GENERIC_STICKERS
+
 # --------------------------
 # Sticker reply function
 # --------------------------
@@ -49,5 +44,4 @@ def get_context_sticker(message_text: str) -> str:
     elif any(word in text for word in ["wow", "surprise", "shock", "oh"]):
         return random.choice(SURPRISE_STICKERS)
     else:
-        # Random generic sticker
         return random.choice(GENERIC_STICKERS)
