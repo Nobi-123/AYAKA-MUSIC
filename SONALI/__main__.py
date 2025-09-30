@@ -1,6 +1,5 @@
 import asyncio
 import importlib
-
 from pyrogram import idle
 
 import config
@@ -13,39 +12,51 @@ from config import BANNED_USERS
 
 
 async def init():
-    if (
-        not config.STRING1
-        and not config.STRING2
-        and not config.STRING3
-        and not config.STRING4
-        and not config.STRING5
-    ):
-        LOGGER(name).error(
-            "𝐒𝐭𝐫𝐢𝐧𝐠 𝐒𝐞𝐬𝐬𝐢𝐨𝐧 𝐍𝐨𝐭 𝐅𝐢𝐥𝐥𝐞𝐝, 𝐏𝐥𝐞𝐚𝐬𝐞 𝐅𝐢𝐥𝐥 𝐀 𝐏𝐲𝐫𝐨𝐠𝐫𝐚𝐦 V2 𝐒𝐞𝐬𝐬𝐢𝐨𝐧🤬"
+    # Check if at least one string session is provided
+    if not any([config.STRING1, config.STRING2, config.STRING3, config.STRING4, config.STRING5]):
+        LOGGER("SONALI").error(
+            "String Sessions not provided! Please fill at least one Pyrogram v2 string session."
         )
+        return
 
+    # Initialize sudo users
     await sudo()
+
+    # Load banned users from DB
     try:
-        users = await get_gbanned()
-        for user_id in users:
+        gbanned_users = await get_gbanned()
+        banned_users = await get_banned_users()
+        for user_id in gbanned_users + banned_users:
             BANNED_USERS.add(user_id)
-        users = await get_banned_users()
-        for user_id in users:
-            BANNED_USERS.add(user_id)
-    except:
-        pass
+    except Exception as e:
+        LOGGER("SONALI").warning(f"Failed to load banned users: {e}")
+
+    # Start main bot
     await app.start()
-    for all_module in ALL_MODULES:
-        importlib.import_module("SONALI.plugins" + all_module)
-    LOGGER("SONALI.plugins").info("𝐀𝐥𝐥 𝐅𝐞𝐚𝐭𝐮𝐫𝐞𝐬 𝐋𝐨𝐚𝐝𝐞𝐝 𝐁𝐚𝐛𝐲🥳...")
+
+    # Load all plugin modules
+    for module in ALL_MODULES:
+        importlib.import_module("SONALI.plugins." + module)
+    LOGGER("SONALI.plugins").info("All features loaded successfully 🎉")
+
+    # Start userbot
     await userbot.start()
+
+    # Start music client
     await RAUSHAN.start()
-    await RAUSHAN.decorators()
-    LOGGER("SONALI").info("╔═════ஜ۩۞۩ஜ════╗\n  ♨️𝗠𝗔𝗗𝗘 𝗕𝗬 𝗔𝗟𝗣𝗛𝗔♨️\n╚═════ஜ۩۞۩ஜ════╝")
+    await RAUSHAN.decorators()  # if any decorators or setup functions are needed
+
+    LOGGER("SONALI").info(
+        "╔═════ஜ۩۞۩ஜ════╗\n  ♨️ MADE BYE TNC ♨️\n╚═════ஜ۩۞۩ஜ════╝"
+    )
+
+    # Keep the bot running
     await idle()
+
+    # Stop everything gracefully on exit
     await app.stop()
     await userbot.stop()
-    LOGGER("SONALI").info("╔═════ஜ۩۞۩ஜ════╗\n  ♨️𝗠𝗔𝗗𝗘 𝗕𝗬 𝗔𝗟𝗣𝗛𝗔♨️\n╚═════ஜ۩۞۩ஜ════╝")
+    LOGGER("SONALI").info("Bot stopped successfully.")
 
 
 if __name__ == "__main__":
