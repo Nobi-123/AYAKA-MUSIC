@@ -1,13 +1,9 @@
 # SONALI/modules/reactions.py
-"""
-Handles automatic reactions and sticker replies based on message content or stickers.
-Compatible with RAUSHAN bot.
-"""
 from pyrogram.types import Message
 import random
-from .stickers import STICKERS
+from .stickers import STICKERS, STICKER_REPLY_MAP
 
-# Example text triggers: keyword -> reaction text
+# --- Text triggers for bot replies ---
 TEXT_REACTIONS = {
     "hello": "👋 Hey there!",
     "hi": "🙌 Hi!",
@@ -17,19 +13,23 @@ TEXT_REACTIONS = {
     "miss you": "Awww 😘 main bhi tumhe miss kar rahi hoon!"
 }
 
-# Text -> sticker triggers: keyword -> sticker file_id
+# --- Text triggers for sticker replies ---
 STICKER_REACTIONS = {
-    "good night": "CAACAgIAAxkBAAEBQj9gkqQkN5jB7x5G3-xyz1234"  # replace with your sticker file_id
+    "good night": "CAACAgIAAxkBAAEBQj9gkqQkN5jB7x5G3-xyz1234"  # Replace with your sticker file_id
 }
 
-# Sticker-to-sticker replies: received_sticker_file_id -> reply_sticker_file_id
-STICKER_REPLY_MAP = {
-    "CAACAgIAAxkBAAEBQkZgkqRR3sB5p2xyzabc": "CAACAgIAAxkBAAEBQl1gkqU0mD5rxyz123"  # Example mapping
+# --- Emoji reactions based on keywords ---
+EMOJI_REACTIONS = {
+    "love": ["❤️", "😍", "😘"],
+    "happy": ["😄", "😁", "😊"],
+    "sad": ["😢", "😭", "😔"],
+    "angry": ["😡", "😠", "🤬"],
+    "wow": ["😲", "😳", "🤯"]
 }
 
 async def react_to_message(message: Message):
     """
-    Automatically reacts to text or stickers.
+    Automatically reacts to human messages or stickers.
     """
     # --- Text reactions ---
     if message.text:
@@ -37,12 +37,19 @@ async def react_to_message(message: Message):
         for keyword, reply in TEXT_REACTIONS.items():
             if keyword in text_lower:
                 await message.reply_text(reply)
-                return
+                break
 
         for keyword, sticker_id in STICKER_REACTIONS.items():
             if keyword in text_lower:
                 await message.reply_sticker(sticker_id)
-                return
+                break
+
+        # --- Emoji reactions ---
+        for keyword, emojis in EMOJI_REACTIONS.items():
+            if keyword in text_lower:
+                emoji = random.choice(emojis)
+                await message.reply_text(emoji)
+                break
 
     # --- Sticker-to-sticker replies ---
     if message.sticker:
@@ -51,7 +58,6 @@ async def react_to_message(message: Message):
         if reply_sticker_id:
             await message.reply_sticker(reply_sticker_id)
             return
-
-    # --- Random sticker reply (optional fun) ---
-    if message.sticker and random.random() < 0.2:  # 20% chance
-        await message.reply_sticker(random.choice(STICKERS))
+        # Random sticker reaction (20% chance)
+        if random.random() < 0.2:
+            await message.reply_sticker(random.choice(STICKERS))
