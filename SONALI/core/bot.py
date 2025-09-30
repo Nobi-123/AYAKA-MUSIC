@@ -93,8 +93,15 @@ OWNER_KEYWORDS = [
     "who is your papa", "who is your father"
 ]
 
+VOICE_REQUEST_KEYWORDS = [
+    "ye msg mujhe voice msg mai bhejo",
+    "send this in voice",
+    "voice me bhejo"
+]
+
+
 # --------------------------
-# Handle Text Messages (Auto Chat + Reactions)
+# Handle Text Messages
 # --------------------------
 @bot.on_message(filters.text)
 async def handle_messages(client, message: Message):
@@ -114,14 +121,29 @@ async def handle_messages(client, message: Message):
             await message.reply_voice(audio_bytes)
         return
 
-    # Chatbot Reply (girlfriend-style Hinglish)
+    # Check for voice request keywords
+    if any(k in text for k in VOICE_REQUEST_KEYWORDS):
+        from modules.chatbot import last_bot_message
+        last_text = last_bot_message.get(chat_id)
+        if last_text:
+            audio_bytes = await text_to_voice(last_text)
+            await message.reply_text("Here's your message in voice 😘")
+            if audio_bytes:
+                await message.reply_voice(audio_bytes)
+            return
+        else:
+            await message.reply_text("No previous message to convert to voice 😅")
+            return
+
+    # Chatbot reply (girlfriend-style Hinglish)
     bot_text, bot_audio = await chat_and_respond(chat_id, message.text, message.from_user.id)
     await message.reply_text(bot_text)
     if bot_audio:
         await message.reply_voice(bot_audio)
 
-    # Automatic reactions (text/sticker triggers)
+    # Automatic reactions
     await react_to_message(message)
+
 
 # --------------------------
 # Sticker Reply
@@ -129,11 +151,14 @@ async def handle_messages(client, message: Message):
 @bot.on_message(filters.sticker)
 async def sticker_reply(client, message: Message):
     await message.reply_sticker(random.choice(STICKERS))
+    await react_to_message(message)  # also run reactions for stickers
+
 
 # --------------------------
 # Music Commands Placeholder
 # --------------------------
 # Import your music player commands here if needed
+
 
 # --------------------------
 # Start Bot
