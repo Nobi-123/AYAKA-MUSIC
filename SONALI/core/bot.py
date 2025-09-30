@@ -7,11 +7,11 @@ from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
 
 # ✅ Relative imports inside the SONALI package
+from .. import config
 from ..modules.voice_manager import text_to_voice
 from ..modules.chatbot import chat_and_respond, OWNER_USERNAME
 from ..modules.reactions import react_to_message, STICKERS
 from ..modules.chat_control import is_chat_enabled, enable_chat, disable_chat
-from .. import config  # fixed relative import
 
 LOGGER = logging.getLogger("RAUSHAN")
 logging.basicConfig(
