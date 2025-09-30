@@ -94,7 +94,7 @@ OWNER_KEYWORDS = [
 
 
 # --------------------------
-# Handle Messages
+# Handle Text Messages (Auto-Chat + Reactions)
 # --------------------------
 @bot.on_message(filters.text)
 async def handle_messages(client, message: Message):
@@ -114,7 +114,7 @@ async def handle_messages(client, message: Message):
             await message.reply_voice(audio_bytes)
         return
 
-    # SambaNova Chatbot + Voice Request
+    # SambaNova Chatbot + Voice Request + Auto Reply
     bot_text, bot_audio = await chat_and_respond(chat_id, message.text, message.from_user.id)
     await message.reply_text(bot_text)
     if bot_audio:
@@ -136,6 +136,7 @@ async def sticker_reply(client, message: Message):
 # Music Commands Placeholder
 # --------------------------
 # Import your music player commands here if needed
+
 
 # --------------------------
 # Start Bot
