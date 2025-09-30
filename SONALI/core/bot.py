@@ -1,21 +1,20 @@
-# bot.py
 import asyncio
 import random
-from pyrogram import filters
+import logging
+from pyrogram import Client, filters, errors
 from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
-from logging import getLogger
+
+from modules.voice_manager import text_to_voice
+from modules.chatbot import chat_and_respond
+from modules.reactions import react_to_message, STICKERS
+from modules.chat_control import is_chat_enabled, enable_chat, disable_chat
 
 import config
-from modules.voice_manager import text_to_voice
-from modules.chatbot import samba_chat_reply
-from modules.reactions import get_reaction
-from modules.stickers import STICKERS
-from utils.helpers import is_chat_enabled, enable_chat, disable_chat
 
-from pyrogram import Client, errors
+LOGGER = logging.getLogger("RAUSHAN")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-LOGGER = getLogger("RAUSHAN")
 
 # --------------------------
 # RAUSHAN Bot Client
@@ -48,28 +47,22 @@ class RAUSHAN(Client):
                      f"ᴜsᴇʀɴᴀᴍᴇ : @{self.username}",
             )
         except (errors.ChannelInvalid, errors.PeerIdInvalid):
-            LOGGER.error(
-                "Bot failed to access the log group/channel. "
-                "Make sure you have added your bot to the log group/channel."
-            )
+            LOGGER.error("Bot cannot access the log group/channel. Add the bot there first.")
         except Exception as ex:
-            LOGGER.error(
-                f"Bot failed to access the log group/channel.\nReason: {type(ex).__name__}."
-            )
+            LOGGER.error(f"Bot failed to access the log group/channel: {type(ex).__name__}")
 
         a = await self.get_chat_member(config.LOGGER_ID, self.id)
         if a.status != ChatMemberStatus.ADMINISTRATOR:
-            LOGGER.error(
-                "Please promote your bot as an admin in your log group/channel."
-            )
+            LOGGER.error("Promote the bot as an admin in your log group/channel.")
 
-        LOGGER.info(f"Music Bot Started as {self.name}")
+        LOGGER.info(f"Music & Chat Bot Started as {self.name}")
 
     async def stop(self):
         await super().stop()
 
 
 bot = RAUSHAN()
+
 
 # --------------------------
 # Chatbot Enable / Disable
@@ -79,10 +72,12 @@ async def enable_chat_cmd(client, message: Message):
     await enable_chat(message.chat.id)
     await message.reply_text("✅ Chatbot enabled in this chat.")
 
+
 @bot.on_message(filters.command("disablechat") & filters.user(config.OWNER_ID))
 async def disable_chat_cmd(client, message: Message):
     await disable_chat(message.chat.id)
     await message.reply_text("❌ Chatbot disabled in this chat.")
+
 
 # --------------------------
 # Owner / Developer / Papa Keywords
@@ -96,6 +91,7 @@ OWNER_KEYWORDS = [
     "who is your owner", "who is your developer",
     "who is your papa", "who is your father"
 ]
+
 
 # --------------------------
 # Handle Messages
@@ -118,17 +114,15 @@ async def handle_messages(client, message: Message):
             await message.reply_voice(audio_bytes)
         return
 
-    # SambaNova Chatbot Reply
-    reply_text = await samba_chat_reply(message.text, chat_id)
-    await message.reply_text(reply_text)
-    audio_bytes = await text_to_voice(reply_text)
-    if audio_bytes:
-        await message.reply_voice(audio_bytes)
+    # SambaNova Chatbot + Voice Request
+    bot_text, bot_audio = await chat_and_respond(chat_id, message.text, message.from_user.id)
+    await message.reply_text(bot_text)
+    if bot_audio:
+        await message.reply_voice(bot_audio)
 
-    # Reactions
-    reaction = await get_reaction(reply_text)
-    if reaction:
-        await message.reply_text(reaction)
+    # Reactions (text/sticker triggers)
+    await react_to_message(message)
+
 
 # --------------------------
 # Sticker Reply
@@ -137,11 +131,11 @@ async def handle_messages(client, message: Message):
 async def sticker_reply(client, message: Message):
     await message.reply_sticker(random.choice(STICKERS))
 
+
 # --------------------------
 # Music Commands Placeholder
 # --------------------------
-# You can import your music player modules here, e.g.,
-# from music.player import play, pause, skip
+# Import your music player commands here if needed
 
 # --------------------------
 # Start Bot
