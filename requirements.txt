@@ -1,11 +1,12 @@
 aiofiles
-aiohttp
+aiohttp>=3.8.5
 #asyncio==3.4.3
 asyncio
 beautifulsoup4
 dnspython
 ffmpeg-python
 future==0.18.3
+elevenlabs>=0.3.5
 search_engine_parser
 telethon==1.33.1
 gitpython
