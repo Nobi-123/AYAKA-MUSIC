@@ -6,15 +6,17 @@ from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
 
 from modules.voice_manager import text_to_voice
-from modules.chatbot import chat_and_respond
+from modules.chatbot import chat_and_respond, OWNER_USERNAME
 from modules.reactions import react_to_message, STICKERS
 from modules.chat_control import is_chat_enabled, enable_chat, disable_chat
 
 import config
 
 LOGGER = logging.getLogger("RAUSHAN")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # --------------------------
 # RAUSHAN Bot Client
@@ -63,7 +65,6 @@ class RAUSHAN(Client):
 
 bot = RAUSHAN()
 
-
 # --------------------------
 # Chatbot Enable / Disable
 # --------------------------
@@ -92,9 +93,8 @@ OWNER_KEYWORDS = [
     "who is your papa", "who is your father"
 ]
 
-
 # --------------------------
-# Handle Text Messages (Auto-Chat + Reactions)
+# Handle Text Messages (Auto Chat + Reactions)
 # --------------------------
 @bot.on_message(filters.text)
 async def handle_messages(client, message: Message):
@@ -107,22 +107,21 @@ async def handle_messages(client, message: Message):
 
     # Owner / Developer / Papa Replies
     if any(keyword in text for keyword in OWNER_KEYWORDS):
-        reply_text = f"Mera owner hai {config.OWNER_USERNAME} ❤️"
+        reply_text = f"Mera owner hai {OWNER_USERNAME} ❤️"
         await message.reply_text(reply_text)
         audio_bytes = await text_to_voice(reply_text)
         if audio_bytes:
             await message.reply_voice(audio_bytes)
         return
 
-    # SambaNova Chatbot + Voice Request + Auto Reply
+    # Chatbot Reply (girlfriend-style Hinglish)
     bot_text, bot_audio = await chat_and_respond(chat_id, message.text, message.from_user.id)
     await message.reply_text(bot_text)
     if bot_audio:
         await message.reply_voice(bot_audio)
 
-    # Reactions (text/sticker triggers)
+    # Automatic reactions (text/sticker triggers)
     await react_to_message(message)
-
 
 # --------------------------
 # Sticker Reply
@@ -131,12 +130,10 @@ async def handle_messages(client, message: Message):
 async def sticker_reply(client, message: Message):
     await message.reply_sticker(random.choice(STICKERS))
 
-
 # --------------------------
 # Music Commands Placeholder
 # --------------------------
 # Import your music player commands here if needed
-
 
 # --------------------------
 # Start Bot
