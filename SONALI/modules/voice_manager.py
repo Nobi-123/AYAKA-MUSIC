@@ -1,10 +1,9 @@
 # SONALI/modules/voice_manager.py
 import logging
 from elevenlabs.client import AsyncElevenLabs
-from .. import config  # correct import from package root
+from .. import config  # ✅ correct import
 
 logger = logging.getLogger(__name__)
-
 MY_VOICE_ID = "YourVoiceIDHere"
 
 async def text_to_voice(text: str) -> bytes | None:
