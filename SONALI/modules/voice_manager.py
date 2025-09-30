@@ -3,7 +3,7 @@ import logging
 import asyncio
 import random
 from elevenlabs.client import AsyncElevenLabs
-from  import config
+import config
 
 logger = logging.getLogger(__name__)
 
