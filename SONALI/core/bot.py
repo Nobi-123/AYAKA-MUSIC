@@ -6,7 +6,7 @@ from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
 
 from modules.voice_manager import text_to_voice
-from modules.chatbot import chat_and_respond, OWNER_USERNAME
+from modules.chatbot import chat_and_respond, OWNER_USERNAME, last_bot_message
 from modules.reactions import react_to_message, STICKERS
 from modules.chat_control import is_chat_enabled, enable_chat, disable_chat
 
@@ -66,18 +66,24 @@ class RAUSHAN(Client):
 bot = RAUSHAN()
 
 # --------------------------
-# Chatbot Enable / Disable
+# Chatbot Enable / Disable (Admin Only)
 # --------------------------
-@bot.on_message(filters.command("enablechat") & filters.user(config.OWNER_ID))
+@bot.on_message(filters.command("enablechat") & filters.group)
 async def enable_chat_cmd(client, message: Message):
+    member = await client.get_chat_member(message.chat.id, message.from_user.id)
+    if member.status not in ("administrator", "creator"):
+        return await message.reply_text("❌ Only group admins can enable the chatbot.")
     await enable_chat(message.chat.id)
-    await message.reply_text("✅ Chatbot enabled in this chat.")
+    await message.reply_text("✅ Chatbot enabled in this group.")
 
 
-@bot.on_message(filters.command("disablechat") & filters.user(config.OWNER_ID))
+@bot.on_message(filters.command("disablechat") & filters.group)
 async def disable_chat_cmd(client, message: Message):
+    member = await client.get_chat_member(message.chat.id, message.from_user.id)
+    if member.status not in ("administrator", "creator"):
+        return await message.reply_text("❌ Only group admins can disable the chatbot.")
     await disable_chat(message.chat.id)
-    await message.reply_text("❌ Chatbot disabled in this chat.")
+    await message.reply_text("❌ Chatbot disabled in this group.")
 
 
 # --------------------------
@@ -123,7 +129,6 @@ async def handle_messages(client, message: Message):
 
     # Check for voice request keywords
     if any(k in text for k in VOICE_REQUEST_KEYWORDS):
-        from modules.chatbot import last_bot_message
         last_text = last_bot_message.get(chat_id)
         if last_text:
             audio_bytes = await text_to_voice(last_text)
@@ -137,6 +142,7 @@ async def handle_messages(client, message: Message):
 
     # Chatbot reply (girlfriend-style Hinglish)
     bot_text, bot_audio = await chat_and_respond(chat_id, message.text, message.from_user.id)
+    last_bot_message[chat_id] = bot_text  # Save last bot message
     await message.reply_text(bot_text)
     if bot_audio:
         await message.reply_voice(bot_audio)
