@@ -2,9 +2,8 @@ import asyncio
 import importlib
 from pyrogram import idle
 
-import config
 from SONALI import LOGGER, app, userbot
-from SONALI.core.call import RAUSHAN
+from SONALI.core.bot import RAUSHAN
 from SONALI.misc import sudo
 from SONALI.plugins import ALL_MODULES
 from SONALI.utils.database import get_banned_users, get_gbanned
@@ -12,48 +11,64 @@ from config import BANNED_USERS
 
 
 async def init():
-    # Check if at least one string session is provided
-    if not any([config.STRING1, config.STRING2, config.STRING3, config.STRING4, config.STRING5]):
+    # --------------------------
+    # Check for String Sessions
+    # --------------------------
+    if not any([getattr(__import__("config"), f"STRING{i}") for i in range(1, 6)]):
         LOGGER("SONALI").error(
-            "String Sessions not provided! Please fill at least one Pyrogram v2 string session."
+            "𝐒𝐭𝐫𝐢𝐧𝐠 𝐒𝐞𝐬𝐬𝐢𝐨𝐧 𝐍𝐨𝐭 𝐅𝐢𝐥𝐥𝐞𝐝, 𝐏𝐥𝐞𝐚𝐬𝐞 𝐅𝐢𝐥𝐥 𝐀 𝐏𝐲𝐫𝐨𝐠𝐫𝐚𝐦 V2 𝐒𝐞𝐬𝐬𝐢𝐨𝐧!"
         )
-        return
 
-    # Initialize sudo users
+    # --------------------------
+    # Load Sudo Users
+    # --------------------------
     await sudo()
 
-    # Load banned users from DB
+    # --------------------------
+    # Load Banned Users
+    # --------------------------
     try:
         gbanned_users = await get_gbanned()
-        banned_users = await get_banned_users()
-        for user_id in gbanned_users + banned_users:
+        for user_id in gbanned_users:
             BANNED_USERS.add(user_id)
-    except Exception as e:
-        LOGGER("SONALI").warning(f"Failed to load banned users: {e}")
 
-    # Start main bot
+        banned_users = await get_banned_users()
+        for user_id in banned_users:
+            BANNED_USERS.add(user_id)
+    except Exception:
+        pass
+
+    # --------------------------
+    # Start Core App & Userbot
+    # --------------------------
     await app.start()
-
-    # Load all plugin modules
-    for module in ALL_MODULES:
-        importlib.import_module("SONALI.plugins." + module)
-    LOGGER("SONALI.plugins").info("All features loaded successfully 🎉")
-
-    # Start userbot
     await userbot.start()
 
-    # Start music client
+    # --------------------------
+    # Load All Plugins
+    # --------------------------
+    for module in ALL_MODULES:
+        importlib.import_module(f"SONALI.plugins.{module}")
+
+    LOGGER("SONALI.plugins").info("✅ All features loaded successfully!")
+
+    # --------------------------
+    # Start RAUSHAN bot
+    # --------------------------
     await RAUSHAN.start()
-    await RAUSHAN.decorators()  # if any decorators or setup functions are needed
+    if hasattr(RAUSHAN, "decorators"):
+        await RAUSHAN.decorators()
 
-    LOGGER("SONALI").info(
-        "╔═════ஜ۩۞۩ஜ════╗\n  ♨️ MADE BYE TNC ♨️\n╚═════ஜ۩۞۩ஜ════╝"
-    )
+    LOGGER("SONALI").info("╔═════ஜ۩۞۩ஜ════╗\n  ♨️ MADE BY ALPHA ♨️\n╚═════ஜ۩۞۩ஜ════╝")
 
-    # Keep the bot running
+    # --------------------------
+    # Idle Mode
+    # --------------------------
     await idle()
 
-    # Stop everything gracefully on exit
+    # --------------------------
+    # Shutdown
+    # --------------------------
     await app.stop()
     await userbot.stop()
     LOGGER("SONALI").info("Bot stopped successfully.")
