@@ -1,6 +1,6 @@
 # SONALI/modules/voice_manager.py
 """
-Manages ElevenLabs Text-to-Speech API calls with API key rotation.
+Generic ElevenLabs voice manager with API key rotation.
 """
 
 import logging
@@ -10,20 +10,19 @@ from . import config
 logger = logging.getLogger(__name__)
 
 # --------------------------
-# Replace this with your preferred voice ID
-# You can set it in config or directly here
+# Use the voice ID from config or a default
 # --------------------------
 BOT_VOICE_ID = config.ELEVENLABS_VOICE_ID or "YourDefaultVoiceID"
 
 async def text_to_voice(text: str) -> bytes | None:
     """
-    Converts text to voice using ElevenLabs with API key rotation.
+    Convert text to voice using ElevenLabs API.
 
     Args:
         text (str): Text to convert.
 
     Returns:
-        bytes | None: Audio bytes if successful, otherwise None.
+        bytes | None: Audio bytes if successful, else None.
     """
     if not config.ELEVENLABS_API_KEYS:
         logger.warning("ELEVENLABS_API_KEYS not configured. Skipping voice generation.")
