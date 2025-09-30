@@ -102,6 +102,28 @@ VOICE_REQUEST_KEYWORDS = [
 
 
 # --------------------------
+# Human-like typing + voice simulation
+# --------------------------
+async def human_reply(message: Message, bot_text: str, audio_bytes: bytes = None):
+    """Simulate human typing and recording before sending reply."""
+    typing_time = min(max(len(bot_text) * 0.05, 1), 5)  # 1-5 sec delay
+    try:
+        await message.chat.send_chat_action("typing")
+        await asyncio.sleep(typing_time)
+        await message.reply_text(bot_text)
+    except Exception:
+        await message.reply_text(bot_text)
+
+    if audio_bytes:
+        try:
+            await message.chat.send_chat_action("record_audio")
+            await asyncio.sleep(typing_time)
+            await message.reply_voice(audio_bytes)
+        except Exception:
+            await message.reply_voice(audio_bytes)
+
+
+# --------------------------
 # Handle Text Messages
 # --------------------------
 @bot.on_message(filters.text)
@@ -115,10 +137,8 @@ async def handle_messages(client, message: Message):
     # Owner replies
     if any(k in text for k in OWNER_KEYWORDS):
         reply_text = f"Mera owner hai {OWNER_USERNAME} ❤️"
-        await message.reply_text(reply_text)
         audio_bytes = await text_to_voice(reply_text)
-        if audio_bytes:
-            await message.reply_voice(audio_bytes)
+        await human_reply(message, reply_text, audio_bytes)
         return
 
     # Voice request
@@ -136,14 +156,10 @@ async def handle_messages(client, message: Message):
 
     # Chatbot reply
     bot_text, _ = await chat_and_respond(chat_id, message.text, message.from_user.id)
-    await message.reply_text(bot_text)
-
-    # Voice reply
     audio_bytes = await text_to_voice(bot_text)
-    if audio_bytes:
-        await message.reply_voice(audio_bytes)
+    await human_reply(message, bot_text, audio_bytes)
 
-    # Reactions
+    # Automatic reactions
     await react_to_message(message)
 
 
