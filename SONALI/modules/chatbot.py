@@ -42,6 +42,8 @@ VOICE_REQUEST_KEYWORDS = [
     "Voice"
     "bolo"
     "baby"
+    "listen"
+    "baby suno"
 ]
 
 # --------------------------
