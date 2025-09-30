@@ -1,20 +1,53 @@
-
 # SONALI/modules/stickers.py
 """
-Contains sticker IDs to be used by the bot for automatic replies.
+Context-aware sticker replies for SONALI.
+- Sends stickers based on message content or mood
+- Works with text messages and automatic reactions
 """
 
 import random
 
-# List of Telegram sticker file_ids
-STICKERS = [
-    "CAACAgUAAxkBAAEEj2Ng6nObGqDFN9Q_hvYfU2N2ZCw7cAACcQADVp29Cm2WjGg1Xb6DJAQ",
-    "CAACAgUAAxkBAAEEj2Rg6nQ2a8l6y7F_8_YqOVc7gYdJ4wACVQADVp29CmaNObo9mT3EjAQ",
-    "CAACAgUAAxkBAAEEj2Ng6nQF9_t9OCc3sKxMciEjF9t8IwACVgADVp29Cn9wrBfr59kQJAQ",
-    "CAACAgUAAxkBAAEEj2Ng6nQF8a8y7F_8_YqOVc7gYdJ4wACVgADVp29Cn9wrBfr59kQJAQ",
-    # Add as many as you want
+# --------------------------
+# Sticker Pools
+# --------------------------
+HAPPY_STICKERS = [
+    "CAACAgEAAxkBAAEBH4FgxP7JbJ2f7y-3h1O1ikG6RvDsvwACXAADwZxgD7hYxkPY3fLFiQE",
+    "CAACAgEAAxkBAAEBH4NgxP7JXmvkb36xV5aRGn7wUgrctwACXQADwZxgD9Y2ztvHJuBvIiQE",
 ]
 
-def get_random_sticker():
-    """Return a random sticker file_id."""
-    return random.choice(STICKERS)
+SAD_STICKERS = [
+    "CAACAgEAAxkBAAEBH4RgxP7JZxTzUcrrL07v5OZay8lPLwACXgADwZxgD8rrd4Lf7OtUFiQE",
+    "CAACAgEAAxkBAAEBH4VgxP7JeBfcGf1yxCtqP87nnHsz9QACXwADwZxgD9pQOyHzR7N5FiQE",
+]
+
+LOVE_STICKERS = [
+    "CAACAgEAAxkBAAEBH4ZgxP7Jj_6pO4hJ-F4uU7v0bZ_tLgACYAADwZxgD2r7uFjTEm6qFiQE",
+    "CAACAgEAAxkBAAEBH4dgxP7Jd-RV1lItpCFjkK8wYuU7HwACXAADwZxgD8-9vJ_sF4OFIiQE",
+]
+
+SURPRISE_STICKERS = [
+    "CAACAgEAAxkBAAEBH4fgxP7JeHfI5OXp2lQhAGfDRcJGRQACXQADwZxgD3qq3GJ_w2RWiQE",
+]
+
+GENERIC_STICKERS = HAPPY_STICKERS + SAD_STICKERS + LOVE_STICKERS + SURPRISE_STICKERS
+
+# --------------------------
+# Sticker reply function
+# --------------------------
+def get_context_sticker(message_text: str) -> str:
+    """
+    Returns a sticker ID based on message content.
+    """
+    text = message_text.lower()
+
+    if any(word in text for word in ["love", "like", "pyaar", "cute"]):
+        return random.choice(LOVE_STICKERS)
+    elif any(word in text for word in ["happy", "yay", "awesome", "fun"]):
+        return random.choice(HAPPY_STICKERS)
+    elif any(word in text for word in ["sad", "cry", "miss", "alone"]):
+        return random.choice(SAD_STICKERS)
+    elif any(word in text for word in ["wow", "surprise", "shock", "oh"]):
+        return random.choice(SURPRISE_STICKERS)
+    else:
+        # Random generic sticker
+        return random.choice(GENERIC_STICKERS)
