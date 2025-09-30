@@ -12,6 +12,9 @@ from modules.chat_control import is_chat_enabled, enable_chat, disable_chat
 
 import config
 
+# --------------------------
+# Logging
+# --------------------------
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("RAUSHAN")
 
@@ -73,7 +76,6 @@ async def handle_messages(client, message: Message):
     if any(k in text.lower() for k in owner_keywords):
         reply_text = f"Mera owner hai {OWNER_USERNAME} ❤️"
         audio_bytes = await text_to_voice(reply_text)
-
         await message.reply_text(reply_text)
         if audio_bytes:
             async with client.send_chat_action(chat_id, ChatAction.RECORD_VOICE):
