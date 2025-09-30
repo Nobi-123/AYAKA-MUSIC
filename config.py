@@ -70,7 +70,7 @@ ELEVENLABS_VOICE_ID = getenv("ELEVENLABS_VOICE_ID", "E7bpJOpaUwdzBn3Wd6Lr")
 # --------------------------
 # Chatbot / SambaNova API
 # --------------------------
-CHATBOT_API_KEY = getenv("SAMBANOVA_API_KEY", "your_sambanova_api_key_here")
+CHATBOT_API_KEY = getenv("SAMBANOVA_API_KEY", "41c87b5d-4a4d-4a8f-9544-48d9bfc9b06a")
 CHATBOT_API_URL = getenv("SAMBANOVA_API_URL", "https://api.sambanova.ai/v1/chat")
 
 # --------------------------
