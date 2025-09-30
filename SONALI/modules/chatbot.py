@@ -1,20 +1,17 @@
 # SONALI/modules/chatbot.py
 """
-Human-like chatbot module for SONALI bot.
-Handles:
-- SambaNova API replies in casual Hinglish
-- Voice replies using ElevenLabs
-- Owner tagging
-- Reactions
+Human-like SambaNova chatbot for SONALI.
+Features:
+- Casual Hinglish replies
+- Emojis, filler words, slang
+- Voice replies via ElevenLabs
+- Owner / developer tagging
 """
 
 import logging
 import aiohttp
 import random
-import asyncio
-from modules.voice_manager import text_to_voice, BOT_VOICE_ID
-from modules.reactions import react_to_message
-
+from modules.voice_manager import text_to_voice
 import config
 
 logger = logging.getLogger(__name__)
@@ -56,17 +53,14 @@ last_bot_message = {}
 # --------------------------
 async def samba_chat_reply(user_text: str, chat_id: int) -> str:
     """
-    Sends a message to SambaNova API and returns a casual human-like reply.
+    Sends user message to SambaNova API and returns a casual Hinglish reply.
     """
     url = config.CHATBOT_API_URL
     headers = {
         "Authorization": f"Bearer {config.CHATBOT_API_KEY}",
         "Content-Type": "application/json",
     }
-    payload = {
-        "input": user_text,
-        "chat_id": str(chat_id)
-    }
+    payload = {"input": user_text, "chat_id": str(chat_id)}
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -74,19 +68,28 @@ async def samba_chat_reply(user_text: str, chat_id: int) -> str:
                 data = await resp.json()
                 reply = data.get("output") or "Hmm, mujhe samajh nahi aaya 😅"
 
-                # Add filler words for casual tone
-                fillers = ["😂", "😅", "hmm…", "accha…", "sahi hai…", "arey waah…"]
-                if random.random() < 0.4:
+                # --------------------------
+                # Add casual Hinglish flair
+                # --------------------------
+                fillers = ["😂", "😅", "hmm…", "accha…", "sahi hai…", "arey waah…", "lol", "yeh toh sahi hai 😎"]
+                slangs = ["bhai", "yaar", "arre", "hai na", "kya bolti public 😜"]
+
+                # Randomly add fillers
+                if random.random() < 0.5:
                     reply += " " + random.choice(fillers)
 
-                # Add small human-like hesitation
+                # Randomly add slangs
                 if random.random() < 0.3:
+                    reply = random.choice(slangs) + ", " + reply
+
+                # Add human hesitation
+                if random.random() < 0.2:
                     reply = "Hmm… " + reply
 
                 return reply
     except Exception as e:
         logger.error(f"SambaNova API failed: {e}")
-        return "Sorry, abhi main reply nahi kar sakti 😢"
+        return "Sorry yaar, abhi main reply nahi kar sakti 😢"
 
 # --------------------------
 # Main chatbot handler
@@ -102,11 +105,11 @@ async def chat_and_respond(chat_id: int, user_text: str, user_id: int):
         last_bot_message[chat_id] = reply_text
         return reply_text, audio_bytes
 
-    # Chatbot reply from SambaNova
+    # Chatbot reply
     bot_text = await samba_chat_reply(user_text, chat_id)
     audio_bytes = await text_to_voice(bot_text)
 
-    # Save last bot message for voice requests
+    # Save last bot message
     last_bot_message[chat_id] = bot_text
     return bot_text, audio_bytes
 
