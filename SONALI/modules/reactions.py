@@ -1,63 +1,56 @@
 # SONALI/modules/reactions.py
-from pyrogram.types import Message
+"""
+Automatic reactions module for SONALI.
+- Reacts to user messages intelligently
+- Sends emojis based on sentiment, keywords, or message type
+- Works with stickers too
+"""
+
 import random
-from .stickers import STICKERS, STICKER_REPLY_MAP
+from pyrogram.types import Message
 
-# --- Text triggers for bot replies ---
-TEXT_REACTIONS = {
-    "hello": "👋 Hey there!",
-    "hi": "🙌 Hi!",
-    "thanks": "😊 You’re welcome!",
-    "good morning": "🌞 Good morning! Have a nice day!",
-    "good night": "🌙 Good night! Sweet dreams!",
-    "miss you": "Awww 😘 main bhi tumhe miss kar rahi hoon!"
-}
+# --------------------------
+# Predefined sticker reactions
+# --------------------------
+STICKERS = [
+    "CAACAgEAAxkBAAEBH4FgxP7JbJ2f7y-3h1O1ikG6RvDsvwACXAADwZxgD7hYxkPY3fLFiQE",
+    "CAACAgEAAxkBAAEBH4NgxP7JXmvkb36xV5aRGn7wUgrctwACXQADwZxgD9Y2ztvHJuBvIiQE",
+    "CAACAgEAAxkBAAEBH4RgxP7JZxTzUcrrL07v5OZay8lPLwACXgADwZxgD8rrd4Lf7OtUFiQE"
+]
 
-# --- Text triggers for sticker replies ---
-STICKER_REACTIONS = {
-    "good night": "CAACAgIAAxkBAAEBQj9gkqQkN5jB7x5G3-xyz1234"  # Replace with your sticker file_id
-}
-
-# --- Emoji reactions based on keywords ---
+# --------------------------
+# Emoji reactions based on message content
+# --------------------------
 EMOJI_REACTIONS = {
     "love": ["❤️", "😍", "😘"],
-    "happy": ["😄", "😁", "😊"],
-    "sad": ["😢", "😭", "😔"],
-    "angry": ["😡", "😠", "🤬"],
-    "wow": ["😲", "😳", "🤯"]
+    "haha": ["😂", "🤣", "😆"],
+    "sad": ["😢", "😭", "💔"],
+    "hello": ["👋", "🙋‍♀️", "😊"],
+    "thanks": ["🙏", "😊", "🤗"],
+    "wow": ["😮", "😲", "🤩"],
+    "angry": ["😡", "🤬", "😠"]
+    "baby" : ["♥️", "😒"]
+    "sex" : ["🍒", "😘", "🥵"]
 }
 
+# Generic filler emojis
+GENERIC_REACTIONS = ["😎", "😉", "😅", "😇", "🤔", "👍", "🎶"]
+
+# --------------------------
+# React to message function
+# --------------------------
 async def react_to_message(message: Message):
     """
-    Automatically reacts to human messages or stickers.
+    Reacts to a message with emojis intelligently.
     """
-    # --- Text reactions ---
-    if message.text:
-        text_lower = message.text.lower()
-        for keyword, reply in TEXT_REACTIONS.items():
-            if keyword in text_lower:
-                await message.reply_text(reply)
-                break
+    text = (message.text or "").lower() if message.text else ""
 
-        for keyword, sticker_id in STICKER_REACTIONS.items():
-            if keyword in text_lower:
-                await message.reply_sticker(sticker_id)
-                break
-
-        # --- Emoji reactions ---
-        for keyword, emojis in EMOJI_REACTIONS.items():
-            if keyword in text_lower:
-                emoji = random.choice(emojis)
-                await message.reply_text(emoji)
-                break
-
-    # --- Sticker-to-sticker replies ---
-    if message.sticker:
-        received_sticker_id = message.sticker.file_id
-        reply_sticker_id = STICKER_REPLY_MAP.get(received_sticker_id)
-        if reply_sticker_id:
-            await message.reply_sticker(reply_sticker_id)
+    # Match emojis based on keywords
+    for keyword, emojis in EMOJI_REACTIONS.items():
+        if keyword in text:
+            await message.reply(random.choice(emojis))
             return
-        # Random sticker reaction (20% chance)
-        if random.random() < 0.2:
-            await message.reply_sticker(random.choice(STICKERS))
+
+    # 10% chance to react with a generic emoji
+    if random.random() < 0.1:
+        await message.reply(random.choice(GENERIC_REACTIONS))
