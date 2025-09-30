@@ -1,24 +1,30 @@
-from SONALI.core.bot import RAUSHAN
-from SONALI.core.dir import dirr
-from SONALI.core.git import git
-from SONALI.core.userbot import Userbot
-from SONALI.misc import dbb, heroku
+# SONALI/__init__.py
 
-from SafoneAPI import SafoneAPI
-from .logging import LOGGER
+# Core modules
+from .core.bot import RAUSHAN
+from .core.dir import dirr
+from .core.git import git
+from .core.userbot import Userbot
 
+# Misc and utils
+from .misc import dbb, heroku
+
+# Modules
+from .modules import chat_and_respond, text_to_voice, react_to_message, STICKERS, is_chat_enabled, enable_chat, disable_chat, last_bot_message, OWNER_USERNAME
+
+# APIs (placeholder, update if you have these classes)
+from .platforms import AppleAPI, CarbonAPI, SoundAPI, SpotifyAPI, RessoAPI, TeleAPI, YouTubeAPI
+
+# Initialize core objects
 dirr()
 git()
 dbb()
 heroku()
 
 app = RAUSHAN()
-api = SafoneAPI()
 userbot = Userbot()
 
-
-from .platforms import *
-
+# Example API objects (update with your actual API classes)
 Apple = AppleAPI()
 Carbon = CarbonAPI()
 SoundCloud = SoundAPI()
